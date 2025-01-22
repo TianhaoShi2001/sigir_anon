@@ -4,7 +4,7 @@ damp=0.02
 num_per_gpu=1 
 trial_name=trial 
 
-seed=2000
+seed=0
 generate_num=80 
 min_item_num=50
 perturb_ratio=0.01
