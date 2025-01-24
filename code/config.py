@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("--if_load_model_exp_name", default='base',type = str)
     parser.add_argument("--if_load_model_exp_name0", default='base',type = str)
     parser.add_argument("--if_sampling", default=None,type = str)
-    parser.add_argument('--cold_model_name',type = str,default = 'deepmusic')
+    parser.add_argument('--cold_model_name',type = str,default = None)
     parser.add_argument('--tune_item_only',type = str,default = 'False')
     parser.add_argument('--iter_num',type = str,default = '0')
     parser.add_argument('--min_item_num',type = int,default = 1)
@@ -58,8 +58,6 @@ def parse_args():
     parser.add_argument("--warmup_lr", default=None,type = float)
     parser.add_argument("--weight_decay", default=None,type = float)
     # load & evaluate & save
-    # parser.add_argument("--path", default=None,type = str)
-    # parser.add_argument("--dataset_dir", default=None,type = str)
     parser.add_argument("--output_dir", default=None,type = str) # begin from workspace
     parser.add_argument("--proj_ckpt", default=None,type = str)
     parser.add_argument("--lora_ckpt", default=None,type = str) 
@@ -75,7 +73,6 @@ def parse_args():
     parser.add_argument("--mode", default='v3',type = str)
     parser.add_argument("--calculate_if_data_num", default=1,type = int) # z_test
     parser.add_argument("--calculate_if_train_data_num", default=0,type = int) # second term H theta. train
-    # parser.add_argument("--calculate_if_z_data_num", default=1,type = int) # test{num} 
     parser.add_argument("--calculate_if_data_path", default=None,type = str)    # z_test 
     parser.add_argument("--dpo_test_num", default=2,type = int) # 
 
@@ -151,7 +148,7 @@ config.workspace_dir = os.path.join(current_dir,config.workspace_name )
 for dir in ['output_dir','proj_ckpt','lora_ckpt','pretrained_path','if_pretrained_path',
             'save_test_path','save_valid_path','save_synthetic_path','synthetic_data_path','if_test_data_path']:
     if config[dir] is not None:
-        config[dir] = os.path.join(config.workspace_dir, config[dir]) # 填写格式 lora_ckpt / ..... / (一定不能从/开始)
+        config[dir] = os.path.join(config.workspace_dir, config[dir]) 
 
 
 if config.freeze_stage == 'stage1':
@@ -169,7 +166,7 @@ else:
 arg_param_dict = {}
 param_list = ['init_lr', 'min_lr', 'warmup_lr', 'weight_decay']
 for param_name in param_list:
-    arg_param_dict[param_name] = config.get(param_name, None) # 复制，即便前面无None也可以
+    arg_param_dict[param_name] = config.get(param_name, None) 
 
 if config.data_name == 'amazon_book': 
     config.user_num = 50000
@@ -215,7 +212,7 @@ elif config.data_name == 'ml-32m':
 for param_name in param_list:
     param = arg_param_dict.get(param_name, None)
     if param is not None:
-        config[param_name] = param  # 覆盖
+        config[param_name] = param 
 
 if config.data_name == 'amazon_book': 
     if config.prompt_version == 'v1':
@@ -227,17 +224,7 @@ if config.data_name == 'amazon_book':
             raise Exception('Not Implemented prompt stage')
     else:
         raise Exception('Not Implemented prompt version')
-elif 'amazon' in config.data_name: # config.data_name == 'amazon_game': 
-    if config.prompt_version == 'v1':
-        if config.prompt_stage == 'stage1':
-            config.prompt_path = f'prompts/tallrec_{config.data_name}.txt'
-        elif config.prompt_stage == 'stage2':
-            config.prompt_path = f'prompts/collm_{config.data_name}.txt'
-        else:
-            raise Exception('Not Implemented prompt stage')
-    else:
-        raise Exception('Not Implemented prompt version')
-elif 'ml-32m' in config.data_name: # config.data_name == 'amazon_game': 
+elif 'ml-32m' in config.data_name: 
     if config.prompt_version == 'v1':
         if config.prompt_stage == 'stage1':
             config.prompt_path = f'prompts/tallrec_movie.txt'
