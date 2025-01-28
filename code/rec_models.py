@@ -506,11 +506,14 @@ class NCF(nn.Module):
         self.user_embedding = nn.Embedding(config.user_num, config.embedding_size, padding_idx=self.padding_index)
         self.item_embedding = nn.Embedding(config.item_num, config.embedding_size, padding_idx=self.padding_index)
         
+        # GMF and final output layer
+        self.final_output = nn.Linear(config.embedding_size, 1)
+
         # MLP layers
         self.mlp = nn.Sequential(
             nn.Linear(config.embedding_size * 2, config.hidden_size),
             nn.ReLU(),
-            nn.Linear(config.hidden_size, 1) # Output a single score
+            nn.Linear(config.hidden_size, config.embedding_size)  # Map to embedding size
         )
         nn.init.normal_(self.user_embedding.weight, std=self.config.init_emb)
         nn.init.normal_(self.item_embedding.weight, std=self.config.init_emb)
@@ -528,8 +531,16 @@ class NCF(nn.Module):
     def forward(self, users, items):
         user_embedding = self.user_embedding(users)
         item_embedding = self.item_embedding(items)
+
+        gmf_embedding = user_embedding * item_embedding
+
         concat_embedding = torch.cat([user_embedding, item_embedding], dim=-1)
-        output = self.mlp(concat_embedding).squeeze(-1)
+        mlp_embedding = self.mlp(concat_embedding)
+
+        combined_embedding = 0.5 * gmf_embedding + 0.5 * mlp_embedding
+
+        output = self.final_output(combined_embedding).squeeze(-1)
+
         return output
 
 class PointWiseFeedForward(nn.Module):
